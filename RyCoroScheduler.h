@@ -1,4 +1,9 @@
-﻿#pragma once
+﻿/**
+ * @author rayzhang
+ * @brief
+ * @date 2024年07月16日
+ */
+#pragma once
 
 #include <chrono>
 #include <coroutine>
@@ -8,7 +13,7 @@
 #include <atomic>
 #include <future>
 #include <mutex>
-// 定义协程的等待状态
+ // 定义协程的等待状态
 enum class RyCoroAwaitState
 {
 	ScheduleNextFrame, // 在下一帧调度

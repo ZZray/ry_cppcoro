@@ -132,13 +132,29 @@ public:
 			std::cout << "创建void协程任务" << '\n';
 			return RyCoroTask(std::coroutine_handle<promise_type>::from_promise(*this));
 		}
-		std::suspend_always initial_suspend() {
-			std::cout << "void协程初始挂起" << '\n';
-			return {};
+		auto initial_suspend() const
+		{
+			std::cout << "void协程初始挂起";
+			struct InitialAwaiter {
+				bool await_ready() const noexcept { return false; }
+				void await_suspend(std::coroutine_handle<promise_type> h) const noexcept {
+					RyCoroScheduler::getInstance().schedule(h);
+				}
+				void await_resume() const noexcept {}
+			};
+			return InitialAwaiter{};
 		}
-		std::suspend_always final_suspend() noexcept {
+		auto final_suspend() const noexcept {
 			std::cout << "void协程最终挂起" << '\n';
-			return {};
+			struct FinalAwaiter {
+				bool await_ready() const noexcept { return false; }
+				void await_suspend(std::coroutine_handle<promise_type> h) const noexcept {
+					h.promise().state = RyCoroTaskState::Completed;
+					RyCoroScheduler::getInstance().schedule(h);
+				}
+				void await_resume() const noexcept {}
+			};
+			return FinalAwaiter{};
 		}
 		void unhandled_exception()
 		{
