@@ -33,12 +33,12 @@ public:
 		std::exception_ptr exceptionPtr;
 
 		RyCoroTask get_return_object() {
-			std::cout << "创建协程任务'\n'" << '\n';
+			std::cout << "创建协程任务\n";
 			return RyCoroTask(std::coroutine_handle<promise_type>::from_promise(*this));
 		}
 		auto initial_suspend() const
 		{
-			std::cout << "协程初始挂起";
+			std::cout << "协程初始挂起\n";
 			struct InitialAwaiter {
 				bool await_ready() const noexcept { return false; }
 				void await_suspend(std::coroutine_handle<promise_type> h) const noexcept {
@@ -77,10 +77,10 @@ public:
 
 	RyCoroTask(std::coroutine_handle<promise_type> h) : coro(h) {}
 	~RyCoroTask() {
-		if (coro) {
-			std::cout << "销毁协程任务" << '\n';
-			coro.destroy();
-		}
+		//if (coro) {
+		//	std::cout << "销毁协程任务" << '\n';
+		//	coro.destroy();
+		//}
 	}
 
 	T getResult() {
@@ -170,10 +170,10 @@ public:
 
 	RyCoroTask(std::coroutine_handle<promise_type> h) : coro(h) {}
 	~RyCoroTask() {
-		if (coro) {
-			std::cout << "销毁void协程任务" << '\n';
-			coro.destroy();
-		}
+		//if (coro) {
+		//	std::cout << "销毁void协程任务" << '\n';
+		//	coro.destroy();
+		//}
 	}
 
 	void getResult() {

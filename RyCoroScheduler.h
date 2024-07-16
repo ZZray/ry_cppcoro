@@ -13,6 +13,7 @@
 #include <atomic>
 #include <future>
 #include <mutex>
+
  // 定义协程的等待状态
 enum class RyCoroAwaitState
 {
@@ -45,9 +46,11 @@ public:
 	// 获取调度器单例
 	static RyCoroScheduler& getInstance()
 	{
-		thread_local RyCoroScheduler instance;
+		static RyCoroScheduler instance;
 		return instance;
 	}
+
+	~RyCoroScheduler();
 
 	// 调度协程
 	void scheduleNextFrame(HandleT coro)
@@ -65,11 +68,31 @@ public:
 
 	const RyCoroSchedulerStats& getStats() const
 	{
-		return stats;
+		return m_stats;
 	}
 
 	// 运行调度器
-	void exec();
+	void run();
+
+	// 停止调度器
+	void stop()
+	{
+		{
+			std::lock_guard<std::mutex> lock(m_queueMutex);
+			std::cout << "Stopping the scheduler.\n";
+			m_stop = true;
+		}
+		m_queueCv.notify_all();
+	}
+
+	// 等待所有协程完成
+	void wait()
+	{
+		std::unique_lock<std::mutex> lock(m_queueMutex);
+		std::cout << "Waiting for all coroutines to complete.\n";
+		m_queueCv.wait(lock, [this] { return m_stats.pendingTaskCount == 0; });
+		std::cout << "All coroutines have completed.\n";
+	}
 
 private:
 	RyCoroScheduler() = default;
@@ -81,10 +104,18 @@ private:
 
 
 	// members
-	std::deque<HandleT> readyQueue;
-	RyCoroSchedulerStats stats;
-	std::mutex queueMutex;
+	std::deque<HandleT> m_readyQueue;
+	RyCoroSchedulerStats m_stats;
+	std::mutex m_queueMutex;
+	std::condition_variable m_queueCv;
+	std::atomic<bool> m_stop{ false };
 };
+
+inline RyCoroScheduler::~RyCoroScheduler()
+{
+	stop();
+	wait();
+}
 
 inline void RyCoroScheduler::schedule(HandleT handle, std::chrono::microseconds delay)
 {
@@ -105,31 +136,45 @@ inline void RyCoroScheduler::schedule(HandleT handle, std::chrono::microseconds 
 	}
 }
 
-inline void RyCoroScheduler::exec()
+inline void RyCoroScheduler::run()
 {
 	std::cout << "开始运行调度器" << '\n';
-	while (!readyQueue.empty())
+	m_stop = false;
+	while (!m_stop)
 	{
-		auto coro = readyQueue.front();
-		readyQueue.pop_front();
-
-		stats.pendingTaskCount--;
-
-		if (!coro.done())
+		std::coroutine_handle<> handle;
 		{
-			std::cout << "恢复协程执行" << '\n';
-			coro.resume();
-			if (!coro.done())
+			std::unique_lock<std::mutex> lock(m_queueMutex);
+			m_queueCv.wait(lock, [this] { return !m_readyQueue.empty() || m_stop; });
+			if (m_readyQueue.empty())
 			{
-				std::cout << "协程未完成，重新调度" << '\n';
-				scheduleNextFrame(coro);
+				std::cout << "No coroutines to run, continuing the loop.\n";
+				continue;
 			}
-			else
+			handle = m_readyQueue.front();
+			m_readyQueue.pop_front();
+		}
+		std::cout << "Resuming coroutine.\n";
+		if (!handle.done())
+		{
+			handle.resume();
+		}
+		else
+		{
+			std::cout << "Coroutine is done, handle destroyed.\n";
+			handle.destroy();
+		}
+		{
+			std::lock_guard<std::mutex> lock(m_queueMutex);
+			--m_stats.pendingTaskCount;
+			if (m_stats.pendingTaskCount == 0 && m_stop)
 			{
-				std::cout << "协程已完成" << '\n';
+				std::cout << "All coroutines finished, notifying all waiting threads.\n";
 			}
+			m_queueCv.notify_all();
 		}
 	}
+	m_stop = true;
 	std::cout << "调度器运行结束" << '\n';
 }
 
@@ -147,22 +192,22 @@ inline void RyCoroScheduler::scheduleImpl(HandleT coro, RyCoroAwaitState state)
 	});
 	 */
 
-	std::lock_guard<std::mutex> lock(queueMutex);
+	std::lock_guard<std::mutex> lock(m_queueMutex);
 	switch (state)
 	{
 	case RyCoroAwaitState::ScheduleNextFrame:
 		std::cout << "将协程加入下一帧队列" << '\n';
-		readyQueue.emplace_back(coro);
+		m_readyQueue.emplace_back(coro);
 		break;
 	case RyCoroAwaitState::ScheduleImmediately:
 		std::cout << "将协程加入立即执行队列" << '\n';
-		readyQueue.emplace_front(coro);
+		m_readyQueue.emplace_front(coro);
 		break;
 	case RyCoroAwaitState::NoSchedule:
 	default:
 		std::cout << "协程不被调度" << '\n';
 		return;
 	}
-	stats.pendingTaskCount++;
-	std::cout << "当前待处理任务数: " << stats.pendingTaskCount << '\n';
+	++m_stats.pendingTaskCount;
+	std::cout << "当前待处理任务数: " << m_stats.pendingTaskCount << '\n';
 }
