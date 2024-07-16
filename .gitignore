@@ -33,5 +33,7 @@
 *.pdb
 *.exe
 
+.vs/
+
 *.user
 CoroTest/
