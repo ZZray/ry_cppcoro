@@ -30,6 +30,8 @@
 *.exe
 *.out
 *.app
+*.pdb
+*.exe
 
 *.user
 CoroTest/

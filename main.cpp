@@ -48,7 +48,7 @@ public:
 	void await_suspend(RyCoroSchedulerHandle h);
 
 	void await_resume() const noexcept {
-		std::cout << "时间等待结束，恢复协程" << std::endl;
+		std::cout << "时间等待结束，恢复协程" << '\n';
 	}
 
 private:
@@ -97,21 +97,21 @@ public:
 		std::atomic<bool> cancelled{ false };
 
 		RyCoroTask get_return_object() {
-			std::cout << "创建协程任务" << std::endl;
+			std::cout << "创建协程任务" << '\n';
 			return RyCoroTask(std::coroutine_handle<promise_type>::from_promise(*this));
 		}
 		std::suspend_always initial_suspend() {
-			std::cout << "协程初始挂起" << std::endl;
+			std::cout << "协程初始挂起" << '\n';
 			return {};
 		}
 		std::suspend_always final_suspend() noexcept {
-			std::cout << "协程最终挂起" << std::endl;
+			std::cout << "协程最终挂起" << '\n';
 			return {};
 		}
 		void unhandled_exception() { std::terminate(); }
 
 		void return_value(T v) {
-			std::cout << "协程返回值: " << v << std::endl;
+			std::cout << "协程返回值: " << v << '\n';
 			value = std::move(v);
 			state = RyCoroTaskState::Completed;
 		}
@@ -120,17 +120,17 @@ public:
 	RyCoroTask(std::coroutine_handle<promise_type> h) : coro(h) {}
 	~RyCoroTask() {
 		if (coro) {
-			std::cout << "销毁协程任务" << std::endl;
+			std::cout << "销毁协程任务" << '\n';
 			coro.destroy();
 		}
 	}
 
 	T getResult() {
 		if (!coro.promise().value.has_value()) {
-			std::cout << "恢复协程以获取结果" << std::endl;
+			std::cout << "恢复协程以获取结果" << '\n';
 			coro.resume();
 		}
-		std::cout << "返回协程结果" << std::endl;
+		std::cout << "返回协程结果" << '\n';
 		return coro.promise().value.value();
 	}
 
@@ -139,7 +139,7 @@ public:
 	RyCoroTaskState getState() const { return coro.promise().state; }
 
 	void cancel() {
-		std::cout << "取消协程任务" << std::endl;
+		std::cout << "取消协程任务" << '\n';
 		coro.promise().cancelled = true;
 	}
 	bool isCancelled() const { return coro.promise().cancelled; }
@@ -157,21 +157,21 @@ public:
 		std::atomic<bool> cancelled{ false };
 
 		RyCoroTask get_return_object() {
-			std::cout << "创建void协程任务" << std::endl;
+			std::cout << "创建void协程任务" << '\n';
 			return RyCoroTask(std::coroutine_handle<promise_type>::from_promise(*this));
 		}
 		std::suspend_always initial_suspend() {
-			std::cout << "void协程初始挂起" << std::endl;
+			std::cout << "void协程初始挂起" << '\n';
 			return {};
 		}
 		std::suspend_always final_suspend() noexcept {
-			std::cout << "void协程最终挂起" << std::endl;
+			std::cout << "void协程最终挂起" << '\n';
 			return {};
 		}
 		void unhandled_exception() { std::terminate(); }
 
 		void return_void() {
-			std::cout << "void协程返回" << std::endl;
+			std::cout << "void协程返回" << '\n';
 			state = RyCoroTaskState::Completed;
 		}
 	};
@@ -179,17 +179,17 @@ public:
 	RyCoroTask(std::coroutine_handle<promise_type> h) : coro(h) {}
 	~RyCoroTask() {
 		if (coro) {
-			std::cout << "销毁void协程任务" << std::endl;
+			std::cout << "销毁void协程任务" << '\n';
 			coro.destroy();
 		}
 	}
 
 	void getResult() {
 		if (coro.promise().state != RyCoroTaskState::Completed) {
-			std::cout << "恢复void协程以完成执行" << std::endl;
+			std::cout << "恢复void协程以完成执行" << '\n';
 			coro.resume();
 		}
-		std::cout << "void协程执行完毕" << std::endl;
+		std::cout << "void协程执行完毕" << '\n';
 	}
 
 	std::coroutine_handle<> getHandle() { return coro; }
@@ -197,7 +197,7 @@ public:
 	RyCoroTaskState getState() const { return coro.promise().state; }
 
 	void cancel() {
-		std::cout << "取消void协程任务" << std::endl;
+		std::cout << "取消void协程任务" << '\n';
 		coro.promise().cancelled = true;
 	}
 	bool isCancelled() const { return coro.promise().cancelled; }
@@ -218,12 +218,12 @@ public:
 
 	// 调度协程
 	void schedule(HandleT handle, std::chrono::microseconds delay = 0ms) {
-		std::cout << "调度协程任务" << std::endl;
+		std::cout << "调度协程任务" << '\n';
 		if (delay.count() != 0) {
 			std::thread([this, handle, delay]() {
-				std::cout << "开始延迟调度，等待" << delay.count() << "微秒" << std::endl;
+				std::cout << "开始延迟调度，等待" << delay.count() << "微秒" << '\n';
 				std::this_thread::sleep_for(delay);
-				std::cout << "延迟结束，调度协程" << std::endl;
+				std::cout << "延迟结束，调度协程" << '\n';
 				this->schedule(handle);
 				}).detach();
 		}
@@ -237,7 +237,7 @@ public:
 	}
 	// 运行调度器
 	void run() {
-		std::cout << "开始运行调度器" << std::endl;
+		std::cout << "开始运行调度器" << '\n';
 		while (!readyQueue.empty()) {
 			auto coro = readyQueue.front();
 			readyQueue.pop_front();
@@ -245,18 +245,18 @@ public:
 			stats.pendingTaskCount--;
 
 			if (!coro.done()) {
-				std::cout << "恢复协程执行" << std::endl;
+				std::cout << "恢复协程执行" << '\n';
 				coro.resume();
 				if (!coro.done()) {
-					std::cout << "协程未完成，重新调度" << std::endl;
+					std::cout << "协程未完成，重新调度" << '\n';
 					scheduleImpl(coro, RyCoroAwaitState::ScheduleNextFrame);
 				}
 				else {
-					std::cout << "协程已完成" << std::endl;
+					std::cout << "协程已完成" << '\n';
 				}
 			}
 		}
-		std::cout << "调度器运行结束" << std::endl;
+		std::cout << "调度器运行结束" << '\n';
 	}
 
 	const RyCoroSchedulerStats& getStats() const {
@@ -286,20 +286,20 @@ private:
 		std::lock_guard<std::mutex> lock(queueMutex);
 		switch (state) {
 		case RyCoroAwaitState::ScheduleNextFrame:
-			std::cout << "将协程加入下一帧队列" << std::endl;
+			std::cout << "将协程加入下一帧队列" << '\n';
 			readyQueue.emplace_back(coro);
 			break;
 		case RyCoroAwaitState::ScheduleImmediately:
-			std::cout << "将协程加入立即执行队列" << std::endl;
+			std::cout << "将协程加入立即执行队列" << '\n';
 			readyQueue.emplace_front(coro);
 			break;
 		case RyCoroAwaitState::NoSchedule:
 		default:
-			std::cout << "协程不被调度" << std::endl;
+			std::cout << "协程不被调度" << '\n';
 			return;
 		}
 		stats.pendingTaskCount++;
-		std::cout << "当前待处理任务数: " << stats.pendingTaskCount << std::endl;
+		std::cout << "当前待处理任务数: " << stats.pendingTaskCount << '\n';
 	}
 
 	std::deque<HandleT> readyQueue;
@@ -315,38 +315,38 @@ bool TimeAwaitable::await_ready() const noexcept
 
 void TimeAwaitable::await_suspend(RyCoroSchedulerHandle h)
 {
-	std::cout << "暂停协程，等待" << duration_.count() << "微秒" << std::endl;
+	std::cout << "暂停协程，等待" << duration_.count() << "微秒" << '\n';
 	sched_->schedule(h, duration_);
 }
 
 
 // 测试用例
 RyCoroTask<int> simpleTask() {
-	std::cout << "开始执行简单任务" << std::endl;
+	std::cout << "开始执行简单任务" << '\n';
 	co_return 42;
 }
 
 RyCoroTask<void> voidTask() {
-	std::cout << "开始执行void任务" << std::endl;
+	std::cout << "开始执行void任务" << '\n';
 	co_return;
 }
 
 //RyCoroTask<int> cancellableTask() {
 //	auto& sched = RyCoroScheduler::getInstance();
-//	std::cout << "开始执行可取消任务" << std::endl;
+//	std::cout << "开始执行可取消任务" << '\n';
 //	co_await sched.delay(std::chrono::seconds(2));
 //	if (co_await std::suspend_always{}; static_cast<RyCoroTask<int>::promise_type*>(std::coroutine_handle<>::from_address(co_await std::noop_coroutine()).address())->cancelled) {
-//		std::cout << "任务被取消" << std::endl;
+//		std::cout << "任务被取消" << '\n';
 //		co_return -1;
 //	}
-//	std::cout << "可取消任务正常完成" << std::endl;
+//	std::cout << "可取消任务正常完成" << '\n';
 //	co_return 24;
 //}
 
 RyCoroTask<void> multiStepTask(int id) {
 	auto& sched = RyCoroScheduler::getInstance();
 	for (int i = 0; i < 3; ++i) {
-		std::cout << "任务 " << id << ": 步骤 " << i << std::endl;
+		std::cout << "任务 " << id << ": 步骤 " << i << '\n';
 		co_await sched.delay(std::chrono::milliseconds(500));
 	}
 }
@@ -354,22 +354,22 @@ RyCoroTask<void> multiStepTask(int id) {
 int main() {
 	auto& sched = RyCoroScheduler::getInstance();
 
-	std::cout << "测试简单任务" << std::endl;
+	std::cout << "测试简单任务" << '\n';
 	auto simple = simpleTask();
 	sched.schedule(simple.getHandle());
 	sched.run();
 	assert(simple.getResult() == 42);
 	assert(simple.getState() == RyCoroTaskState::Completed);
-	std::cout << "简单任务测试通过" << std::endl;
+	std::cout << "简单任务测试通过" << '\n';
 
-	std::cout << "\n测试void任务" << std::endl;
+	std::cout << "\n测试void任务" << '\n';
 	auto voidT = voidTask();
 	sched.schedule(voidT.getHandle());
 	sched.run();
 	assert(voidT.getState() == RyCoroTaskState::Completed);
-	std::cout << "Void任务测试通过" << std::endl;
+	std::cout << "Void任务测试通过" << '\n';
 
-	//std::cout << "\n测试可取消任务" << std::endl;
+	//std::cout << "\n测试可取消任务" << '\n';
 	//auto cancellable = cancellableTask();
 	//sched.schedule(cancellable.getHandle());
 	//std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -377,9 +377,9 @@ int main() {
 	//sched.run();
 	//assert(cancellable.getResult() == -1);
 	//assert(cancellable.getState() == RyCoroTaskState::Completed);
-	//std::cout << "可取消任务测试通过" << std::endl;
+	//std::cout << "可取消任务测试通过" << '\n';
 
-	std::cout << "\n测试多步骤任务" << std::endl;
+	std::cout << "\n测试多步骤任务" << '\n';
 	auto task1 = multiStepTask(1);
 	auto task2 = multiStepTask(2);
 	sched.schedule(task1.getHandle());
@@ -387,8 +387,8 @@ int main() {
 	sched.run();
 	assert(task1.getState() == RyCoroTaskState::Completed);
 	assert(task2.getState() == RyCoroTaskState::Completed);
-	std::cout << "多步骤任务测试通过" << std::endl;
+	std::cout << "多步骤任务测试通过" << '\n';
 
-	std::cout << "\n所有测试完成" << std::endl;
+	std::cout << "\n所有测试完成" << '\n';
 	return 0;
 }

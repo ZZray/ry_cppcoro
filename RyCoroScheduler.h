@@ -83,14 +83,14 @@ private:
 
 inline void RyCoroScheduler::schedule(HandleT handle, std::chrono::microseconds delay)
 {
-	std::cout << "调度协程任务" << std::endl;
+	std::cout << "调度协程任务" << '\n';
 	if (delay.count() != 0)
 	{
 		std::thread([this, handle, delay]()
 			{
-				std::cout << "开始延迟调度，等待" << delay.count() << "微秒" << std::endl;
+				std::cout << "开始延迟调度，等待" << delay.count() << "微秒" << '\n';
 				std::this_thread::sleep_for(delay);
-				std::cout << "延迟结束，调度协程" << std::endl;
+				std::cout << "延迟结束，调度协程" << '\n';
 				this->scheduleNextFrame(handle);
 			}).detach();
 	}
@@ -102,7 +102,7 @@ inline void RyCoroScheduler::schedule(HandleT handle, std::chrono::microseconds 
 
 inline void RyCoroScheduler::exec()
 {
-	std::cout << "开始运行调度器" << std::endl;
+	std::cout << "开始运行调度器" << '\n';
 	while (!readyQueue.empty())
 	{
 		auto coro = readyQueue.front();
@@ -112,20 +112,20 @@ inline void RyCoroScheduler::exec()
 
 		if (!coro.done())
 		{
-			std::cout << "恢复协程执行" << std::endl;
+			std::cout << "恢复协程执行" << '\n';
 			coro.resume();
 			if (!coro.done())
 			{
-				std::cout << "协程未完成，重新调度" << std::endl;
+				std::cout << "协程未完成，重新调度" << '\n';
 				scheduleNextFrame(coro);
 			}
 			else
 			{
-				std::cout << "协程已完成" << std::endl;
+				std::cout << "协程已完成" << '\n';
 			}
 		}
 	}
-	std::cout << "调度器运行结束" << std::endl;
+	std::cout << "调度器运行结束" << '\n';
 }
 
 inline void RyCoroScheduler::scheduleImpl(HandleT coro, RyCoroAwaitState state)
@@ -146,18 +146,18 @@ inline void RyCoroScheduler::scheduleImpl(HandleT coro, RyCoroAwaitState state)
 	switch (state)
 	{
 	case RyCoroAwaitState::ScheduleNextFrame:
-		std::cout << "将协程加入下一帧队列" << std::endl;
+		std::cout << "将协程加入下一帧队列" << '\n';
 		readyQueue.emplace_back(coro);
 		break;
 	case RyCoroAwaitState::ScheduleImmediately:
-		std::cout << "将协程加入立即执行队列" << std::endl;
+		std::cout << "将协程加入立即执行队列" << '\n';
 		readyQueue.emplace_front(coro);
 		break;
 	case RyCoroAwaitState::NoSchedule:
 	default:
-		std::cout << "协程不被调度" << std::endl;
+		std::cout << "协程不被调度" << '\n';
 		return;
 	}
 	stats.pendingTaskCount++;
-	std::cout << "当前待处理任务数: " << stats.pendingTaskCount << std::endl;
+	std::cout << "当前待处理任务数: " << stats.pendingTaskCount << '\n';
 }
