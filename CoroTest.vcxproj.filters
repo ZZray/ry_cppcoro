@@ -18,25 +18,10 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="RyCoroScheduler.h">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Scheduler.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
     <ClInclude Include="RyCoro.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="RyCoroTask.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="RyFutureAwaiter.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="RyTimeAwaitable.h">
-      <Filter>源文件</Filter>
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

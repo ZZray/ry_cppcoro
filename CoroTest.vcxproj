@@ -129,14 +129,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="RyCoroScheduler.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RyCoro.h" />
-    <ClInclude Include="RyCoroTask.h" />
-    <ClInclude Include="RyFutureAwaiter.h" />
-    <ClInclude Include="Scheduler.h" />
-    <ClInclude Include="RyTimeAwaitable.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
