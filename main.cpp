@@ -74,11 +74,11 @@ RyCoroTask<int> longRunningTask()
     co_return 100;
 }
 
-// RyCoroTask<int> nestedCoroutine()
-//{
-//     auto innerResult = co_await PrintInt();
-//     co_return innerResult * 2;
-// }
+RyCoroTask<int> nestedCoroutine()
+{
+    auto innerResult = co_await PrintInt();
+    co_return innerResult * 2;
+}
 
 int main()
 {
@@ -155,12 +155,12 @@ int main()
     std::cout << "多个协程并发执行测试通过\n\n";
 
     // 9. 测试协程的嵌套
-    // std::cout << "9. 测试协程的嵌套：\n";
-    // auto nestedTask = nestedCoroutine();
-    // auto nestedResult = nestedTask.waitForResult();
-    // assert(nestedResult.has_value() && "Nested coroutine should complete");
-    // assert(*nestedResult == 6 && "Nested coroutine should return 6");
-    // std::cout << "协程嵌套测试通过\n\n";
+    std::cout << "9. 测试协程的嵌套：\n";
+    auto nestedTask = nestedCoroutine();
+    auto nestedResult = nestedTask.waitForResult();
+    assert(nestedResult.has_value() && "Nested coroutine should complete");
+    assert(*nestedResult == 6 && "Nested coroutine should return 6");
+    std::cout << "协程嵌套测试通过\n\n";
 
     std::cout << "所有测试完成，测试通过！\n";
 
